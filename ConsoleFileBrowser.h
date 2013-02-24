@@ -31,8 +31,8 @@ protected:
   void setLoopSleepTime(int pTimeUSleep);
 
 
-  virtual void headerCallback();
-  virtual void footerCallback();
+  virtual void headerCallback()=0;
+  virtual void footerCallback()=0;
 
   int getNbDirectories();
   int getTotalFiles();
@@ -69,7 +69,9 @@ protected:
   int aNbDirectories;
   int aTotalFiles;
   bool lRedraw;
-  
+	int row,col;
+	int curRow;
+	
   bool aCurrentFileState;
   std::string aCurrentFileDirectory;
   std::string aCurrentFileName;

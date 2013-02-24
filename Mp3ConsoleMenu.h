@@ -12,8 +12,9 @@ public:
 
 	void onNext();
 	void onPrev();
-	void UpdateMetaData(){}
-	
+	void UpdateMetaData();
+	//void mainLoop();
+	  
 	static Mp3ConsoleMenu &getInstance(){return _instance ;}
 
 protected:
@@ -25,13 +26,22 @@ protected:
 
   virtual bool loopIteration();
   virtual void endLoop();
+  
+	char strMetaData[100];
+	char *stream_title;
+	
+	int nMetaSz;
+	
+	void  onVolume(int dev, int bIncrease);
+	void onReceive();
+	void onStream();
 private:
   void playFile(const std::string& pFileName);
 
   bool aPlaylistMode;
   bool aNowPlaying;
-  bool aRepeat,aShuffle;
-
+  bool aRepeat,aShuffle, bStream, bRecieve;
+	
 	static Mp3ConsoleMenu _instance;
 };
 

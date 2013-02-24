@@ -25,12 +25,13 @@ ConsoleFileBrowser::ConsoleFileBrowser()
   intrflush(stdscr, FALSE);
   keypad(stdscr, TRUE);
 
-  init_pair(1,COLOR_WHITE,COLOR_BLACK);
-  init_pair(2,COLOR_GREEN,COLOR_BLACK);
-  init_pair(3,COLOR_BLUE,COLOR_BLACK);
-  init_pair(4,COLOR_WHITE,COLOR_BLACK);
-  init_pair(5,COLOR_WHITE,COLOR_BLACK);
-  init_pair(6,COLOR_RED,COLOR_BLACK);
+  init_pair(1,COLOR_WHITE,COLOR_BLACK); //repeat
+  init_pair(2,COLOR_GREEN,COLOR_BLACK); //directory color
+  init_pair(3,COLOR_BLUE,COLOR_BLACK); //static text 1
+  init_pair(4,COLOR_WHITE,COLOR_BLACK); //static text 2
+  init_pair(5,COLOR_WHITE,COLOR_BLACK); //shuffle
+  init_pair(6,COLOR_WHITE,COLOR_BLACK); //mp3_IN 
+  init_pair(7,COLOR_WHITE,COLOR_BLACK); //mp3_OUT
 
   // File system initialization
 
@@ -45,6 +46,8 @@ ConsoleFileBrowser::ConsoleFileBrowser()
   aNbFiles = 0;
   aTotalFiles = 0;
 
+	row=0;
+	col=0;
   // Internal list init
   aCurrentSelection = 0;
   aListVisibleBase = 0;
@@ -70,7 +73,7 @@ void ConsoleFileBrowser::setCurrentMatchNames(const std::vector<std::string>& pM
 void ConsoleFileBrowser::mainLoop()
 {
   int lKey = 0;
-
+	unsigned int nloops=0;
 
   startLoop();
   getLocalFiles();
@@ -89,6 +92,12 @@ void ConsoleFileBrowser::mainLoop()
     if(lRedraw) {
       redraw();
     }
+	if(++nloops > 2){  // the scrolling marquee
+		headerCallback();
+//		refresh();
+		nloops=0;
+	}
+	
 
     lKey = getch();
 
@@ -104,10 +113,12 @@ void ConsoleFileBrowser::mainLoop()
       case KEY_UP:
         upKey();
         lRedraw = true;
+		flushinp();
         break;
       case KEY_DOWN:
         downKey();
         lRedraw = true;
+		flushinp();
         break;
       case KEY_NPAGE:
         pageDown();
@@ -136,7 +147,9 @@ void ConsoleFileBrowser::mainLoop()
         }
     }
 
+
     usleep(aLoopSleepTime);
+
   } while(lKey != 27 && lKey != 'q');
 
   endLoop();
@@ -144,10 +157,10 @@ void ConsoleFileBrowser::mainLoop()
 
 
 
-#define aHeaderHeight 3;
-#define aFooterHeight 3;
+#define aHeaderHeight 6;
+#define aFooterHeight 6;
 
-
+/*
 void ConsoleFileBrowser::headerCallback()
 {
   aCallbackNotExecuted = true;
@@ -159,24 +172,22 @@ void ConsoleFileBrowser::footerCallback()
 {
   aCallbackNotExecuted = true;
 }
-
-#define LINES 17
+*/
+//#define LINES 17
 void ConsoleFileBrowser::redraw()
 {
   clear();
 
+	getmaxyx(stdscr,row,col);
+  
   getLocalFiles();
 
   // Drawing the header...
-
-  aCallbackNotExecuted=false;
   headerCallback();
-  if(aCallbackNotExecuted) {
-	 printw("---------- Blacklight Console File Browser ----------");
-    printw("INDEX OF : %s\n",aCurrentDirectory.c_str());
-  }
+ 
+	printw("\n");
 
-  int lMaxSize = LINES - aHeaderHeight - aFooterHeight;
+  int lMaxSize = row - aHeaderHeight - aFooterHeight;
   int lVisibleSize = lMaxSize;
   // Drawing the file list
   int lMax = aListVisibleBase+lVisibleSize;
@@ -211,10 +222,12 @@ void ConsoleFileBrowser::redraw()
     }
     printw("%s\n",lSubstr.c_str());
     lCompte++;
+	curRow++;
   }
   if(lCompte < lMaxSize) {
     for(int j=lCompte;j<lMaxSize;j++) {
-      printw("\n");
+		printw("\n");
+		curRow++;
     }
   }
 
@@ -223,13 +236,10 @@ void ConsoleFileBrowser::redraw()
 
   // Drawing the screen bottom
   attron(COLOR_PAIR(4));
-  aCallbackNotExecuted=false;
+  
   footerCallback();
-  if(aCallbackNotExecuted) {
-	 printw("-----------------------------------------------------");
-     printw("     UP/DOWN: Select   ENTER: Select   q: Quit       ");
-     printw("-----------------------------------------------------");
-  }
+ 
+  setsyx(-1, -1);
 }
 
 void ConsoleFileBrowser::enterKey()
@@ -367,7 +377,13 @@ void ConsoleFileBrowser::getLocalFiles()
   if(aRefreshFiles == false) {
     return;
   }
-  aRefreshFiles = false;
+ 
+  aRefreshFiles = false; 
+ 
+    if(aCurrentDirectory.empty()) {
+		return;
+	}
+
 
   // Getting the directory data
   std::vector<std::string> lFiles,lDirectories;

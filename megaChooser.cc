@@ -24,7 +24,7 @@ void onSignal(int sig)
 
 int main(int argc,char** argv)
 {
-//  srand(time(NULL));
+  srand(time(NULL));
 	signal(SIGUSR1, onSignal);
 	signal(SIGUSR2, onSignal);
 

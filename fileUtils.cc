@@ -98,5 +98,7 @@ void removeLastPathPart(std::string& pPath)
   int lPos = pPath.find_last_of("//");
   if(lPos != std::string::npos) {
     pPath = pPath.substr(0,lPos);
+	if(pPath.empty())
+		pPath="//";
   }
 }
